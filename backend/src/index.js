@@ -29,7 +29,8 @@ app.use("/api/inngest", serve({ client: inngest, functions }));
 // API Routes
 app.get("/", (req, res) => res.send("Server is Live!!"));
 
-app.listen(port, async () => {
-  console.log(`Server is listening at http://localhost:${port}`);
-  await connectDB();
-});
+connectDB().then(
+  app.listen(port, () => {
+    console.log(`Server is listening at http://localhost:${port}`);
+  })
+);
