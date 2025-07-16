@@ -11,6 +11,8 @@ const port = process.env.PORT || 3000;
 
 const app = express();
 
+await connectDB();
+
 // Common Middlewares
 app.use(express.json());
 app.use(express.urlencoded());
@@ -29,8 +31,6 @@ app.use("/api/inngest", serve({ client: inngest, functions }));
 // API Routes
 app.get("/", (req, res) => res.send("Server is Live!!"));
 
-connectDB().then(
-  app.listen(port, () => {
-    console.log(`Server is listening at http://localhost:${port}`);
-  })
-);
+app.listen(port, () => {
+  console.log(`Server is listening at http://localhost:${port}`);
+});
