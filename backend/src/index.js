@@ -9,6 +9,7 @@ import { inngest, functions } from "../Inngest/index.js";
 import showRouter from "../routes/show.route.js";
 import bookingRouter from "../routes/booking.route.js";
 import adminRouter from "../routes/admin.route.js";
+import userRouter from "../routes/user.route.js";
 
 const port = process.env.PORT || 3000;
 
@@ -36,6 +37,7 @@ app.get("/", (req, res) => res.send("Server is Live!!"));
 app.use("/api/show", showRouter);
 app.use("/api/booking", bookingRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api/user", userRouter);
 
 app.listen(port, () => {
   console.log(`Server is listening at http://localhost:${port}`);

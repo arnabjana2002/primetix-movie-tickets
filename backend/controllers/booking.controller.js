@@ -27,7 +27,7 @@ const checkSeatsAvailability = async (showId, selectedSeats) => {
 
 // desc: Controller function to create a new booking
 // path: POST /api/bookings/create
-// TODO: access: Protected (User)
+// access: Protected (User)
 export const createBooking = async (req, res) => {
   try {
     const { userId } = req.auth();
@@ -68,10 +68,9 @@ export const createBooking = async (req, res) => {
   }
 };
 
-
 // desc: Controller function to get occupied seats
 // path: GET /api/bookings/seats/:showId
-// TODO: access: Protected (User)
+// access: Protected (User)
 export const getOccupiedSeats = async (req, res) => {
   try {
     const { showId } = req.params;
