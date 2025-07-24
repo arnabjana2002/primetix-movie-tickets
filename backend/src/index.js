@@ -18,6 +18,13 @@ const app = express();
 
 await connectDB();
 
+//* Stripe Webhooks Route
+app.use(
+  "/api/stripe",
+  express.raw({ type: "application/json" }),
+  stripeWebhooks
+);
+
 // Common Middlewares
 app.use(express.json());
 app.use(express.urlencoded());
@@ -29,13 +36,6 @@ app.use(
 
 // Additional Middlewares
 app.use(clerkMiddleware());
-
-//* Stripe Webhooks Route
-app.use(
-  "/api/stripe",
-  express.raw({ type: "application/json" }),
-  stripeWebhooks
-);
 
 //* Set up the "/api/inngest" (recommended) routes with the serve handler
 app.use("/api/inngest", serve({ client: inngest, functions }));

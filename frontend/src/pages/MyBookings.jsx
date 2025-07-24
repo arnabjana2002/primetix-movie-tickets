@@ -7,6 +7,7 @@ import timeFormat from "../lib/timeFormat.js";
 import dateFormat from "../lib/dateFormat.js";
 import { useAppContext } from "../context/AppContext.jsx";
 import toast from "react-hot-toast";
+import { Link } from "react-router";
 
 const MyBookings = () => {
   const currency = import.meta.env.VITE_CURRENCY;
@@ -22,7 +23,7 @@ const MyBookings = () => {
         headers: { Authorization: `Bearer ${await getToken()}` },
       });
       if (data.success) setBookings(data.bookings);
-      else toast.error("Something went wrong")
+      else toast.error("Something went wrong");
     } catch (error) {
       console.log("Error in getting all bookings:", error);
       toast.error("Error in getting bookings");
@@ -77,9 +78,12 @@ const MyBookings = () => {
                 {item.amount}
               </p>
               {!item.isPaid && (
-                <button className="bg-primary px-4 py-1.5 mb-3 text-sm rounded-full font-medium cursor-pointer">
+                <Link
+                  to={item.paymentLink}
+                  className="bg-primary px-4 py-1.5 mb-3 text-sm rounded-full font-medium cursor-pointer"
+                >
                   Pay Now
-                </button>
+                </Link>
               )}
             </div>
             {/* Seat Infos */}
