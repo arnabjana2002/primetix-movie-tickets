@@ -1,9 +1,13 @@
 import { Outlet } from "react-router";
 import AdminNavbar from "../../components/admin/AdminNavbar";
 import AdminSidebar from "../../components/admin/AdminSidebar";
+import { useAppContext } from "../../context/AppContext";
+import LoadingComponent from "../../components/LoadingComponent";
 
 const Layout = () => {
-  return (
+  const { isAdmin } = useAppContext();
+
+  return isAdmin ? (
     <>
       <AdminNavbar />
       <div className="flex">
@@ -13,6 +17,8 @@ const Layout = () => {
         </div>
       </div>
     </>
+  ) : (
+    <LoadingComponent />
   );
 };
 

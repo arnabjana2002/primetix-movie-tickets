@@ -10,6 +10,7 @@ import showRouter from "../routes/show.route.js";
 import bookingRouter from "../routes/booking.route.js";
 import adminRouter from "../routes/admin.route.js";
 import userRouter from "../routes/user.route.js";
+import { stripeWebhooks } from "../controllers/stripeWebhooks.js";
 
 const port = process.env.PORT || 3000;
 
@@ -22,12 +23,19 @@ app.use(express.json());
 app.use(express.urlencoded());
 app.use(
   cors({
-    origin: [process.env.CORS_ORIGIN, "http://localhost:5173/"],
+    origin: [process.env.CORS_ORIGIN, "http://localhost:5173"],
   })
 );
 
 // Additional Middlewares
 app.use(clerkMiddleware());
+
+//* Stripe Webhooks Route
+app.use(
+  "/api/stripe",
+  express.raw({ type: "application/json" }),
+  stripeWebhooks
+);
 
 //* Set up the "/api/inngest" (recommended) routes with the serve handler
 app.use("/api/inngest", serve({ client: inngest, functions }));

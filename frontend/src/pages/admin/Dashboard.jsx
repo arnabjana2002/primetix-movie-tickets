@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import {
   ChartLineIcon,
   CircleDollarSignIcon,
@@ -6,14 +7,18 @@ import {
   UserIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { dummyDashboardData } from "../../assets/assets.js";
+// import { dummyDashboardData } from "../../assets/assets.js";
 import LoadingComponent from "../../components/LoadingComponent";
 import Title from "../../components/admin/Title.jsx";
 import BlurCircle from "../../components/BlurCircle.jsx";
 import dateFormat from "../../lib/dateFormat.js";
+import { useAppContext } from "../../context/AppContext.jsx";
+import toast from "react-hot-toast";
 
 const Dashboard = () => {
   const currency = import.meta.env.VITE_CURRENCY;
+
+  const { axios, getToken, user, tmdb_image_base_url } = useAppContext();
 
   const [dashboardData, setDashboardData] = useState({
     totalBookings: 0,
@@ -32,7 +37,10 @@ const Dashboard = () => {
     },
     {
       title: "Total Revenue",
-      value: currency + (new Intl.NumberFormat('en-IN').format(dashboardData.totalRevenue) || "0"),
+      value:
+        currency +
+        (new Intl.NumberFormat("en-IN").format(dashboardData.totalRevenue) ||
+          "0"),
       icon: CircleDollarSignIcon,
     },
     {
@@ -48,13 +56,28 @@ const Dashboard = () => {
   ];
 
   const fetchDashboardData = async () => {
-    setDashboardData(dummyDashboardData);
-    setIsLoading(false);
+    // setDashboardData(dummyDashboardData);
+    try {
+      const { data } = await axios.get("/api/admin/dashboard", {
+        headers: { Authorization: `Bearer ${await getToken()}` },
+      });
+      if (data.success) {
+        setDashboardData(data.dashboardData);
+        setIsLoading(false);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.log("Error in fetchDashboardData:", error);
+      toast.error("Error in fetching dashboard data");
+    }
   };
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    if (user) {
+      fetchDashboardData();
+    }
+  }, [user]);
 
   return !isLoading ? (
     <>
@@ -89,14 +112,15 @@ const Dashboard = () => {
             className="w-55 rounded-lg overflow-hidden h-full pb-3 bg-primary/10 border border-primary/20 hover:-translate-y-1 transition duration-300"
           >
             <img
-              src={show.movie.poster_path}
+              src={tmdb_image_base_url + show.movie.poster_path}
               className="h-60 w-full object-cover"
               alt=""
             />
             <p className="font-medium p-2 truncate">{show.movie.title}</p>
             <div className="flex items-center justify-between px-2">
               <p className="text-lg font-medium">
-                {currency} {new Intl.NumberFormat('en-IN').format(show.showPrice)}
+                {currency}{" "}
+                {new Intl.NumberFormat("en-IN").format(show.showPrice)}
               </p>
               <p className="flex items-center gap-1 text-sm text-gray-400 mt-1 pr-1">
                 <StarIcon className="size-4 text-primary fill-primary" />

@@ -1,13 +1,17 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 import Title from "../../components/admin/Title";
-import { dummyShowsData } from "../../assets/assets.js";
+// import { dummyShowsData } from "../../assets/assets.js";
 import LoadingComponent from "../../components/LoadingComponent";
 import { CheckIcon, DeleteIcon, StarIcon } from "lucide-react";
 import kConverter from "../../lib/kConverter.js";
 import toast from "react-hot-toast";
+import { useAppContext } from "../../context/AppContext.jsx";
 
 const AddShows = () => {
   const currency = import.meta.env.VITE_CURRENCY;
+
+  const { axios, getToken, user, tmdb_image_base_url } = useAppContext();
 
   // State Variables
   const [nowPlayingMovies, setNowPlayingMovies] = useState([]);
@@ -15,14 +19,28 @@ const AddShows = () => {
   const [dateTimeSelection, setDateTimeSelection] = useState({});
   const [dateTimeInput, setDateTimeInput] = useState("");
   const [showPrice, setShowPrice] = useState("");
+  const [addingShow, setAddingShow] = useState(false);
 
   const fetchNowPlayingMovies = async () => {
-    setNowPlayingMovies(dummyShowsData);
+    // setNowPlayingMovies(dummyShowsData);
+    try {
+      const { data } = await axios.get("/api/show/now-playing", {
+        headers: { Authorization: `Bearer ${await getToken()}` },
+      });
+
+      if (data.success) {
+        setNowPlayingMovies(data.movies);
+      }
+    } catch (error) {
+      console.log("Error in Fetching Now Playing Movies", error);
+    }
   };
 
   useEffect(() => {
-    fetchNowPlayingMovies();
-  }, []);
+    if (user) {
+      fetchNowPlayingMovies();
+    }
+  }, [user]);
 
   const handleMovieClick = (movieId) => {
     if (selectedMovie !== movieId) setSelectedMovie(movieId);
@@ -54,6 +72,53 @@ const AddShows = () => {
     });
   };
 
+  //* Handler for adding shows
+  const handleAddShow = async () => {
+    try {
+      setAddingShow(true);
+
+      if (
+        !selectedMovie ||
+        !showPrice ||
+        Object.keys(dateTimeSelection).length === 0
+      ) {
+        toast.error(
+          "Please select a movie, enter a price, and add show times."
+        );
+        setAddingShow(false);
+        return;
+      }
+
+      const showInput = Object.entries(dateTimeSelection).map(
+        ([date, time]) => ({ date, time })
+      );
+
+      const payload = {
+        movieId: selectedMovie,
+        showPrice: Number(showPrice),
+        showInput,
+      };
+
+      const { data } = await axios.post("/api/show/add", payload, {
+        headers: { Authorization: `Bearer ${await getToken()}` },
+      });
+
+      if(data.success){
+        toast.success(data.message);
+        setSelectedMovie(null);
+        setDateTimeSelection({});
+        setShowPrice("");
+        setDateTimeInput("")
+      } else{
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.log("Error in Adding Show:", error.message);
+      toast.error("Failed to add show. Please try again.");
+    }
+    setAddingShow(false);
+  };
+
   return nowPlayingMovies.length > 0 ? (
     <>
       {/* Title */}
@@ -64,13 +129,13 @@ const AddShows = () => {
         <div className="group flex flex-wrap gap-4 mt-4 w-max">
           {nowPlayingMovies.map((movie) => (
             <div
-              key={movie._id}
+              key={movie.id}
               className={`relative max-w-40 cursor-pointer group-hover:not-hover:opacity-40 hover:-translate-y-1 transition duration-300`}
-              onClick={() => handleMovieClick(movie._id)}
+              onClick={() => handleMovieClick(movie.id)}
             >
               <div className="relative rounded-lg overflow-hidden">
                 <img
-                  src={movie.poster_path}
+                  src={tmdb_image_base_url + movie.poster_path}
                   alt="poster"
                   className="w-full object-cover brightness-90"
                 />
@@ -85,7 +150,7 @@ const AddShows = () => {
                 </div>
               </div>
               {/* Check Mark */}
-              {selectedMovie === movie._id && (
+              {selectedMovie === movie.id && (
                 <div className="absolute top-2 right-2 flex items-center justify-center bg-primary size-6 rounded">
                   <CheckIcon strokeWidth={2.5} className="size-4 text-white" />
                 </div>
@@ -156,7 +221,11 @@ const AddShows = () => {
       ))}
 
       {/* Add Show Button */}
-      <button className="bg-primary text-white px-8 py-2 mt-6 rounded hover:bg-primary/90 transition-all cursor-pointer">
+      <button
+        onClick={handleAddShow}
+        disabled={addingShow}
+        className="bg-primary text-white px-8 py-2 mt-6 rounded hover:bg-primary/90 transition-all cursor-pointer"
+      >
         Add Show
       </button>
     </>

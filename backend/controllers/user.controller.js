@@ -9,7 +9,7 @@ export const getUserBookings = async (req, res) => {
   try {
     const userId = req.auth().userId;
 
-    const bookings = await Booking.find({ userId })
+    const bookings = await Booking.find({ user: userId })
       .populate({
         path: "show",
         populate: { path: "movie" },
@@ -38,15 +38,18 @@ export const updateFavourite = async (req, res) => {
       user.privateMetadata.favourites = [];
     }
 
+    let responseMessage;
     // Check if the movieId is already in favourites
     //  If not, add it
     if (!user.privateMetadata.favourites.includes(movieId)) {
       user.privateMetadata.favourites.push(movieId);
+      responseMessage = "Favourite added successfully";
     } else {
       // If it is already in favourites, remove it
       user.privateMetadata.favourites = user.privateMetadata.favourites.filter(
         (item) => item !== movieId
       );
+      responseMessage = "Favourite removed successfully";
     }
 
     // Update the user's private metadata with the new favourites array
@@ -54,9 +57,7 @@ export const updateFavourite = async (req, res) => {
       privateMetadata: user.privateMetadata,
     });
 
-    res
-      .status(201)
-      .json({ success: true, message: "Favourite added successfully" });
+    res.status(201).json({ success: true, message: responseMessage });
   } catch (error) {
     console.log("Error occurred in updateFavourite controller", error);
     res.status(500).json({ success: false, message: error.message });

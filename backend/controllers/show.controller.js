@@ -11,7 +11,6 @@ export const getNowPlayingMovies = async (_, res) => {
       "https://api.themoviedb.org/3/movie/now_playing",
       {
         headers: {
-          accept: "application/json",
           Authorization: `Bearer ${process.env.TMDB_API_ACCESS_TOKEN}`,
         },
       }
@@ -39,7 +38,6 @@ export const addShow = async (req, res) => {
       const [movieDetailsResponse, movieCreditsResponse] = await Promise.all([
         axios.get(`https://api.themoviedb.org/3/movie/${movieId}`, {
           headers: {
-            accept: "application/json",
             Authorization: `Bearer ${process.env.TMDB_API_ACCESS_TOKEN}`,
           },
         }),
@@ -106,7 +104,7 @@ export const getAllShows = async (req, res) => {
 
     const uniqueShows = new Set(shows.map((show) => show.movie));
 
-    res.status(200).json({ success: true, message: Array.from(uniqueShows) });
+    res.status(200).json({ success: true, shows: Array.from(uniqueShows) });
   } catch (error) {
     console.log("Error occurred in getAllShows controller", error);
     res.status(500).json({ success: false, message: error.message });

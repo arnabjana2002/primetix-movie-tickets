@@ -1,5 +1,6 @@
 import Booking from "../models/booking.model.js";
 import Show from "../models/show.model.js";
+import stripe from "stripe";
 
 // desc: helper function to check availability of the selected seats for a movie
 const checkSeatsAvailability = async (showId, selectedSeats) => {
@@ -26,7 +27,7 @@ const checkSeatsAvailability = async (showId, selectedSeats) => {
 };
 
 // desc: Controller function to create a new booking
-// path: POST /api/bookings/create
+// path: POST /api/booking/create
 // access: Protected (User)
 export const createBooking = async (req, res) => {
   try {
@@ -59,9 +60,38 @@ export const createBooking = async (req, res) => {
     showDetails.markModified("occupiedSeats");
     await showDetails.save();
 
-    // Todo: Stripe Payment Gateway goes here
+    //* Done: Stripe Payment Gateway goes here
+    //* Initializing Stripe Instance
+    const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
+    //* Creating line items for Stripe
+    const line_items = [
+      {
+        price_data: {
+          currency: "inr",
+          product_data: {
+            name: showDetails.movie.title,
+          },
+          unit_amount: Math.floor(booking.amount) * 100,
+        },
+        quantity: 1,
+      },
+    ];
+    //* Creating payment session using line_items
+    const session = await stripeInstance.checkout.sessions.create({
+      success_url: `${origin}/loading/my-bookings`,
+      cancel_url: `${origin}/my-bookings`,
+      line_items: line_items,
+      mode: "payment",
+      metadata: {
+        bookingId: booking._id.toString(),
+      },
+      expires_at: Math.floor(Date.now() / 1000) + 30 * 60, //! Expires in 30 minutes
+    });
+    //* Saving the session link in the database
+    booking.paymentLink = session.url;
+    await booking.save();
 
-    res.status(201).json({ success: true, message: "Booking Succssful" });
+    res.status(201).json({ success: true, url: session.url }); //* sending the session link to the frontend within the response json
   } catch (error) {
     console.log("Error occurred in createBooking controller", error);
     res.status(500).json({ success: false, message: error.message });
@@ -69,7 +99,7 @@ export const createBooking = async (req, res) => {
 };
 
 // desc: Controller function to get occupied seats
-// path: GET /api/bookings/seats/:showId
+// path: GET /api/booking/seats/:showId
 // access: Protected (User)
 export const getOccupiedSeats = async (req, res) => {
   try {

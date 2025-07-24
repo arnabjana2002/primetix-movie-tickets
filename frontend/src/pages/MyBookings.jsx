@@ -1,25 +1,40 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
-import { dummyBookingData } from "../assets/assets.js";
+// import { dummyBookingData } from "../assets/assets.js";
 import LoadingComponent from "../components/LoadingComponent.jsx";
 import BlurCircle from "../components/BlurCircle.jsx";
 import timeFormat from "../lib/timeFormat.js";
 import dateFormat from "../lib/dateFormat.js";
-import { BringToFront } from "lucide-react";
+import { useAppContext } from "../context/AppContext.jsx";
+import toast from "react-hot-toast";
 
 const MyBookings = () => {
   const currency = import.meta.env.VITE_CURRENCY;
+
+  const { axios, getToken, user, tmdb_image_base_url } = useAppContext();
 
   const [bookings, setBookings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const getAllBookings = async () => {
-    setBookings(dummyBookingData);
+    try {
+      const { data } = await axios.get("/api/user/bookings", {
+        headers: { Authorization: `Bearer ${await getToken()}` },
+      });
+      if (data.success) setBookings(data.bookings);
+      else toast.error("Something went wrong")
+    } catch (error) {
+      console.log("Error in getting all bookings:", error);
+      toast.error("Error in getting bookings");
+    }
     setIsLoading(false);
   };
 
   useEffect(() => {
-    getAllBookings();
-  }, []);
+    if (user) {
+      getAllBookings();
+    }
+  }, [user]);
 
   return !isLoading ? (
     <div className="relative px-6 md:px-16 lg:px-40 pt-30 md:pt-40 min-h-[80vh]">
@@ -37,7 +52,7 @@ const MyBookings = () => {
           <div className="flex flex-col md:flex-row">
             {/* Movie Poster */}
             <img
-              src={item.show.movie.poster_path}
+              src={tmdb_image_base_url + item.show.movie.poster_path}
               alt="poster"
               className="md:max-w-45 aspect-video h-auto rounded object-cover object-bottom"
             />

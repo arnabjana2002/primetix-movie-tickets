@@ -1,29 +1,26 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 import Title from "../../components/admin/Title";
-import { dummyShowsData } from "../../assets/assets.js";
+// import { dummyShowsData } from "../../assets/assets.js";
 import LoadingComponent from "../../components/LoadingComponent";
 import dateFormat from "../../lib/dateFormat.js";
+import { useAppContext } from "../../context/AppContext.jsx";
 
 const ListShows = () => {
   const currency = import.meta.env.VITE_CURRENCY;
+
+  const { axios, getToken, user } = useAppContext();
 
   const [shows, setShows] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const getAllShows = async () => {
     try {
-      setShows([
-        {
-          movie: dummyShowsData[0],
-          showDateTime: "2025-06-30T02:30:00.000Z",
-          showPrice: 590,
-          occupiedSeats: {
-            A1: "user_1",
-            B1: "user_2",
-            C1: "user_3",
-          },
-        },
-      ]);
+      const { data } = await axios.get("/api/admin/all-shows", {
+        headers: { Authorization: `Bearer ${await getToken()}` },
+      });
+
+      setShows(data.shows);
       setIsLoading(false);
     } catch (error) {
       console.error("Error in ListShows.jsx: ", error);
@@ -31,8 +28,10 @@ const ListShows = () => {
   };
 
   useEffect(() => {
-    getAllShows();
-  }, []);
+    if (user) {
+      getAllShows();
+    }
+  }, [user]);
 
   return !isLoading ? (
     <>

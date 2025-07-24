@@ -2,24 +2,35 @@
 import { useEffect, useState } from "react";
 import Title from "../../components/admin/Title.jsx";
 import LoadingComponent from "../../components/LoadingComponent";
-import { dummyBookingData } from "../../assets/assets.js";
+// import { dummyBookingData } from "../../assets/assets.js";
 import dateFormat from "../../lib/dateFormat.js";
-
+import { useAppContext } from "../../context/AppContext.jsx";
 
 const ListBookings = () => {
   const currency = import.meta.env.VITE_CURRENCY;
+
+  const { axios, getToken, user } = useAppContext();
 
   const [bookings, setBookings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const getAllBookings = async () => {
-    setBookings(dummyBookingData);
+    try {
+      const { data } = await axios.get("/api/admin/all-bookings", {
+        headers: { Authorization: `Bearer ${await getToken()}` },
+      });
+      setBookings(data.bookings);
+    } catch (error) {
+      console.log("Error in getting all bookings", error);
+    }
     setIsLoading(false);
   };
 
   useEffect(() => {
-    getAllBookings();
-  }, []);
+    if (user) {
+      getAllBookings();
+    }
+  }, [user]);
 
   return !isLoading ? (
     <>
@@ -38,17 +49,21 @@ const ListBookings = () => {
             </tr>
           </thead>
           <tbody className="text-sm font-light">
-            {
-              bookings.map((item,index)=>(
-                <tr key={index} className="border-b border-primary/20 bg-primary/5 even:bg-primary/10">
-                  <td className="p-2 min-w-45 pl-5">{item.user.name}</td>
-                  <td className="p-2">{item.show.movie.title}</td>
-                  <td className="p-2">{dateFormat(item.show.showDateTime)}</td>
-                  <td className="p-2">{item.bookedSeats.join(", ")}</td>
-                  <td className="p-2">{currency}{" "}{new Intl.NumberFormat('en-IN').format(item.amount)}</td>
-                </tr>
-              ))
-            }
+            {bookings.map((item, index) => (
+              <tr
+                key={index}
+                className="border-b border-primary/20 bg-primary/5 even:bg-primary/10"
+              >
+                <td className="p-2 min-w-45 pl-5">{item.user.name}</td>
+                <td className="p-2">{item.show.movie.title}</td>
+                <td className="p-2">{dateFormat(item.show.showDateTime)}</td>
+                <td className="p-2">{item.bookedSeats.join(", ")}</td>
+                <td className="p-2">
+                  {currency}{" "}
+                  {new Intl.NumberFormat("en-IN").format(item.amount)}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
