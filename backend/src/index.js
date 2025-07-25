@@ -35,6 +35,9 @@ app.use(
   })
 );
 
+// Also allow preflight for all routes
+app.options("*", cors());
+
 // Additional Middlewares
 app.use(clerkMiddleware());
 
