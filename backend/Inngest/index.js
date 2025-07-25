@@ -144,6 +144,8 @@ const sendBookingConfirmationMail = inngest.createFunction(
     </div>
   </div>`,
     });
+
+    console.log("email sent")
   }
 );
 
