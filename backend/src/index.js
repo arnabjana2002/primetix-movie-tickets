@@ -28,10 +28,17 @@ app.use(
 // Common Middlewares
 app.use(express.json());
 app.use(express.urlencoded());
+const allowedOrigins = [process.env.CORS_ORIGIN, "http://localhost:5173"];
 app.use(
   cors({
-    origin: [process.env.CORS_ORIGIN, "http://localhost:5173"],
-    credentials: true
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
   })
 );
 
